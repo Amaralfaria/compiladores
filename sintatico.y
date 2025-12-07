@@ -115,6 +115,10 @@ TipoDados verifica_contexto(char *nome_do_simbolo) {
     return sym -> tipo;
 }
 
+TipoDados obter_tipo_ou_erro(bool valido, TipoDados tipo_desejado){
+    return valido ? tipo_desejado : T_ERRO;
+}
+
 %}
 
 %union {
@@ -235,8 +239,7 @@ var: ID
 ;
 expressao_simples: expressao_aditiva relop expressao_aditiva			
     {        
-        assegura_aritmetica($1, $3);
-        $$ = T_INTEIRO;       
+        $$ = obter_tipo_ou_erro(assegura_aritmetica($1, $3), T_INTEIRO);
     }
     | expressao_aditiva			{$$ = $1;}
 ;
@@ -249,8 +252,7 @@ relop: LE{;}
 ;
 expressao_aditiva: expressao_aditiva operacao_add termo 
     {
-        assegura_aritmetica($1, $3);
-        $$ = T_INTEIRO;       
+        $$ = obter_tipo_ou_erro(assegura_aritmetica($1, $3), T_INTEIRO);
     }
     | termo					{$$ = $1;}
 ;
@@ -260,8 +262,7 @@ operacao_add: SOMA					{;}
 ;
 termo: termo mulop fator				
     {
-        assegura_aritmetica($1, $3);
-        $$ = T_INTEIRO;
+        $$ = obter_tipo_ou_erro(assegura_aritmetica($1, $3), T_INTEIRO);
     }
 	| fator						{$$ = $1;}
 ;
