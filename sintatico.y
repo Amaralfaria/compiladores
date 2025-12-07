@@ -4,30 +4,45 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef enum {
+    T_INTEIRO,
+    T_VAZIO,
+} TipoDados;
+
 /* Tabela de Símbolos */
 struct symrec {
     char *name;             /* identificador */
+    TipoDados tipo;
     struct symrec *next;    /* proximo item da lista */
 };
 
 typedef struct symrec symrec;
 
+const char* tipo_para_string(TipoDados tipo) {
+    switch (tipo) {
+        case T_INTEIRO: return "inteiro";
+        case T_VAZIO:    return "vazio";
+        default:       return "DESCONHECIDO";
+    }
+}
+
 /* ponteiro global para a tabela */
 symrec *sym_table = (symrec *)0;
 
 /* prototipos */
-symrec *putsym(char *sym_name);
+symrec *putsym(char *sym_name, TipoDados tipo);
 symrec *getsym(char *sym_name);
-void install(char *sym_name);
+void install(char *sym_name, TipoDados tipo);
 void context_check(char *sym_name);
 
 /* funcao para inserir na tabela */
-symrec *putsym(char *sym_name) {
+symrec *putsym(char *sym_name, TipoDados tipo) {
     symrec *ptr;
     ptr = (symrec *) malloc(sizeof(symrec));
     ptr->name = (char *) malloc(strlen(sym_name) + 1);
     strcpy(ptr->name, sym_name);
     ptr->next = (struct symrec *)sym_table;
+    ptr->tipo = tipo;
     sym_table = ptr;
     return ptr;
 }
@@ -42,12 +57,12 @@ symrec *getsym(char *sym_name) {
 }
 
 /* funcao para declaracao */
-void install(char *sym_name) {
+void install(char *sym_name, TipoDados tipo) {
     symrec *s;
     s = getsym(sym_name);
     if (s == 0) {
-        putsym(sym_name);
-        printf("> Declaracao: '%s' registrado na tabela.\n", sym_name);
+        putsym(sym_name, tipo);
+        printf("> Declaracao: '%s' do tipo %s registrado na tabela.\n", sym_name, tipo_para_string(tipo));
     } else {
         printf("Erro semântico: Identificador '%s' ja definido.\n", sym_name);
     }
@@ -66,6 +81,7 @@ void context_check(char *sym_name) {
 
 %union {
     char *cadeia;
+    int tipo;
 }
 
 %token INTEIRO
@@ -87,6 +103,7 @@ void context_check(char *sym_name) {
 %token MUL
 %token DIV
 
+%type <tipo> especificador_de_tipo
 
 %left '='
 %left EQ NE
@@ -108,14 +125,14 @@ declaracao: declaracao_de_var 				{;}
 declaracao_de_var: especificador_de_tipo ID ';' 
     { 
         /* instalar na tabela de simbolos */
-        install($2); 
+        install($2, $1); 
     } 
 ;
-especificador_de_tipo: INTEIRO 				{;}
-	| VAZIO						{;}
+especificador_de_tipo: INTEIRO 				{$$ = T_INTEIRO;}
+	| VAZIO						{$$ = T_VAZIO;}
 ;
 declaracao_de_funcao: especificador_de_tipo ID '(' params ')' comando_composto { 
-        install($2); 
+        install($2, $1); 
     }
 ;
 params: lista_params {;}
@@ -126,11 +143,11 @@ lista_params: lista_params ',' param {;}
 ;
 param: especificador_de_tipo ID 
     { 
-        install($2); 
+        install($2, $1); 
     }
     | especificador_de_tipo ID '[' ']'
     {
-        install($2);
+        install($2, $1); 
     }
 ;
 comando_composto: '{' declaracoes_locais lista_de_comandos '}'	{;}
