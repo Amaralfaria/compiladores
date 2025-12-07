@@ -67,9 +67,9 @@ void instalar_simbolo(char *nome_do_simbolo, TipoDados tipo) {
     s = obter_simbolo(nome_do_simbolo);
     if (s == 0) {
         adicionar_simbolo(nome_do_simbolo, tipo);
-        printf("> Declaracao: '%s' do tipo %s registrado na tabela.\n", nome_do_simbolo, tipo_para_string(tipo));
+        printf("> Declaracao (linha %d): '%s' do tipo %s registrado na tabela.\n", num_linhas, nome_do_simbolo, tipo_para_string(tipo));
     } else {
-        printf("Erro semântico: Identificador '%s' ja definido.\n", nome_do_simbolo);
+        printf("Erro semântico (linha %d): Identificador '%s' ja definido.\n", num_linhas, nome_do_simbolo);
     }
 }
 
@@ -107,10 +107,10 @@ bool assegura_tipo_numerico(int t) {
 TipoDados verifica_contexto(char *nome_do_simbolo) {
     registro_de_simbolo *sym = obter_simbolo(nome_do_simbolo);
     if (sym == 0) {
-        printf("Erro semântico: Identificador '%s' nao declarado.\n", nome_do_simbolo);
+        printf("Erro semântico (linha %d): Identificador '%s' nao declarado.\n", num_linhas, nome_do_simbolo);
         return T_ERRO;
     } else {
-        /* printf("> Uso: '%s' verificado com sucesso.\n", nome_do_simbolo); */
+        /* printf("> Uso (linha %d): '%s' verificado com sucesso.\n", num_linhas, nome_do_simbolo); */
     }
     return sym -> tipo;
 }
