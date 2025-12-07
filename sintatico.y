@@ -17,13 +17,13 @@ typedef int bool;
 #define false 0
 
 /* Tabela de Símbolos */
-struct symrec {
+struct registro_de_simbolo {
     char *name;             /* identificador */
     TipoDados tipo;
-    struct symrec *next;    /* proximo item da lista */
+    struct registro_de_simbolo *proximo;    /* proximo item da lista */
 };
 
-typedef struct symrec symrec;
+typedef struct registro_de_simbolo registro_de_simbolo;
 
 const char* tipo_para_string(TipoDados tipo) {
     switch (tipo) {
@@ -33,43 +33,43 @@ const char* tipo_para_string(TipoDados tipo) {
     }
 }
 
-symrec *sym_table = (symrec *)0;
+registro_de_simbolo *tabela_de_simbolos = (registro_de_simbolo *)0;
 
-symrec *putsym(char *sym_name, TipoDados tipo);
-symrec *getsym(char *sym_name);
-void install(char *sym_name, TipoDados tipo);
-TipoDados context_check(char *sym_name);
+registro_de_simbolo *adicionar_simbolo(char *nome_do_simbolo, TipoDados tipo);
+registro_de_simbolo *obter_simbolo(char *nome_do_simbolo);
+void instalar_simbolo(char *nome_do_simbolo, TipoDados tipo);
+TipoDados verifica_contexto(char *nome_do_simbolo);
 bool assegura_tipo_igual(int t1, int t2);
 bool assegura_tipo_numerico(int t);
 bool assegura_aritmetica(int t1, int t2);
 
-symrec *putsym(char *sym_name, TipoDados tipo) {
-    symrec *ptr;
-    ptr = (symrec *) malloc(sizeof(symrec));
-    ptr->name = (char *) malloc(strlen(sym_name) + 1);
-    strcpy(ptr->name, sym_name);
-    ptr->next = (struct symrec *)sym_table;
+registro_de_simbolo *adicionar_simbolo(char *nome_do_simbolo, TipoDados tipo) {
+    registro_de_simbolo *ptr;
+    ptr = (registro_de_simbolo *) malloc(sizeof(registro_de_simbolo));
+    ptr->name = (char *) malloc(strlen(nome_do_simbolo) + 1);
+    strcpy(ptr->name, nome_do_simbolo);
+    ptr->proximo = (struct registro_de_simbolo *)tabela_de_simbolos;
     ptr->tipo = tipo;
-    sym_table = ptr;
+    tabela_de_simbolos = ptr;
     return ptr;
 }
 
-symrec *getsym(char *sym_name) {
-    symrec *ptr;
-    for (ptr = sym_table; ptr != (symrec *)0; ptr = (symrec *)ptr->next)
-        if (strcmp(ptr->name, sym_name) == 0)
+registro_de_simbolo *obter_simbolo(char *nome_do_simbolo) {
+    registro_de_simbolo *ptr;
+    for (ptr = tabela_de_simbolos; ptr != (registro_de_simbolo *)0; ptr = (registro_de_simbolo *)ptr->proximo)
+        if (strcmp(ptr->name, nome_do_simbolo) == 0)
             return ptr;
     return 0;
 }
 
-void install(char *sym_name, TipoDados tipo) {
-    symrec *s;
-    s = getsym(sym_name);
+void instalar_simbolo(char *nome_do_simbolo, TipoDados tipo) {
+    registro_de_simbolo *s;
+    s = obter_simbolo(nome_do_simbolo);
     if (s == 0) {
-        putsym(sym_name, tipo);
-        printf("> Declaracao: '%s' do tipo %s registrado na tabela.\n", sym_name, tipo_para_string(tipo));
+        adicionar_simbolo(nome_do_simbolo, tipo);
+        printf("> Declaracao: '%s' do tipo %s registrado na tabela.\n", nome_do_simbolo, tipo_para_string(tipo));
     } else {
-        printf("Erro semântico: Identificador '%s' ja definido.\n", sym_name);
+        printf("Erro semântico: Identificador '%s' ja definido.\n", nome_do_simbolo);
     }
 }
 
@@ -104,13 +104,13 @@ bool assegura_tipo_numerico(int t) {
     return true;
 }
 
-TipoDados context_check(char *sym_name) {
-    symrec *sym = getsym(sym_name);
+TipoDados verifica_contexto(char *nome_do_simbolo) {
+    registro_de_simbolo *sym = obter_simbolo(nome_do_simbolo);
     if (sym == 0) {
-        printf("Erro semântico: Identificador '%s' nao declarado.\n", sym_name);
+        printf("Erro semântico: Identificador '%s' nao declarado.\n", nome_do_simbolo);
         return T_ERRO;
     } else {
-        /* printf("> Uso: '%s' verificado com sucesso.\n", sym_name); */
+        /* printf("> Uso: '%s' verificado com sucesso.\n", nome_do_simbolo); */
     }
     return sym -> tipo;
 }
@@ -171,14 +171,14 @@ declaracao: declaracao_de_var 				{;}
 declaracao_de_var: especificador_de_tipo ID ';' 
     { 
         /* instalar na tabela de simbolos */
-        install($2, $1); 
+        instalar_simbolo($2, $1); 
     } 
 ;
 especificador_de_tipo: INTEIRO 				{$$ = T_INTEIRO;}
 	| VAZIO						{$$ = T_VAZIO;}
 ;
 declaracao_de_funcao: especificador_de_tipo ID '(' params ')' comando_composto { 
-        install($2, $1); 
+        instalar_simbolo($2, $1); 
     }
 ;
 params: lista_params {;}
@@ -189,11 +189,11 @@ lista_params: lista_params ',' param {;}
 ;
 param: especificador_de_tipo ID 
     { 
-        install($2, $1); 
+        instalar_simbolo($2, $1); 
     }
     | especificador_de_tipo ID '[' ']'
     {
-        install($2, $1); 
+        instalar_simbolo($2, $1); 
     }
 ;
 comando_composto: '{' declaracoes_locais lista_de_comandos '}'	{;}
@@ -230,7 +230,7 @@ expressao: var '=' expressao
 ;
 var: ID 
     { 
-        $$ = context_check($1); 
+        $$ = verifica_contexto($1); 
     }
 ;
 expressao_simples: expressao_aditiva relop expressao_aditiva			
@@ -275,7 +275,7 @@ fator: NUM                       {$$ = T_INTEIRO;}
 ;
 chamada: ID '(' args ')' 
     {
-        $$ = context_check($1);
+        $$ = verifica_contexto($1);
     }
 ;
 args: lista_args  {;}
