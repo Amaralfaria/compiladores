@@ -2,6 +2,7 @@
 %{
   # include <string.h>
   # include "sintatico_tab.h"
+  int num_linhas = 1;
 %}
 %%
 inteiro		{return INTEIRO;}
@@ -25,7 +26,8 @@ retorna		{return RETORNA;}
                 return ID;
             }
 [0-9]+		{return NUM;}
-[ \t\n]*	{;}
+\n          { num_linhas++; }  /* Achou enter? Conta linha */
+[ \t]+	    { ; }              /* Achou espaço ou tab? Ignora */
 .		{return yytext[0];}
 %%
 int yywrap() {

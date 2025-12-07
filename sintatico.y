@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+extern int num_linhas;
+
 typedef enum {
     T_INTEIRO,
     T_VAZIO,
@@ -89,7 +91,7 @@ bool assegura_tipo_igual(int t1, int t2){
     }
 
     if(t1 != t2) {
-        printf("Erro Semântico: Tipos incompatíveis! (Esperava tipos iguais)\n");
+        printf("Erro Semântico (linha %d): Tipos incompatíveis! (Esperava tipos iguais)\n", num_linhas);
         return false;
     }
     return true;
@@ -101,7 +103,7 @@ bool assegura_tipo_numerico(int t) {
     }
 
     if (t != T_INTEIRO) {
-        printf("Erro Semântico: Operação aritmética requer tipo INTEIRO.\n");
+        printf("Erro Semântico (linha %d): Operação aritmética requer tipo INTEIRO.\n", num_linhas);
         return false;
     }
     return true;
