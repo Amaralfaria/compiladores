@@ -33,10 +33,8 @@ const char* tipo_para_string(TipoDados tipo) {
     }
 }
 
-/* ponteiro global para a tabela */
 symrec *sym_table = (symrec *)0;
 
-/* prototipos */
 symrec *putsym(char *sym_name, TipoDados tipo);
 symrec *getsym(char *sym_name);
 void install(char *sym_name, TipoDados tipo);
@@ -45,7 +43,6 @@ bool assegura_tipo_igual(int t1, int t2);
 bool assegura_tipo_numerico(int t);
 bool assegura_aritmetica(int t1, int t2);
 
-/* funcao para inserir na tabela */
 symrec *putsym(char *sym_name, TipoDados tipo) {
     symrec *ptr;
     ptr = (symrec *) malloc(sizeof(symrec));
@@ -57,7 +54,6 @@ symrec *putsym(char *sym_name, TipoDados tipo) {
     return ptr;
 }
 
-/* funcao para buscar na tabela */
 symrec *getsym(char *sym_name) {
     symrec *ptr;
     for (ptr = sym_table; ptr != (symrec *)0; ptr = (symrec *)ptr->next)
@@ -66,7 +62,6 @@ symrec *getsym(char *sym_name) {
     return 0;
 }
 
-/* funcao para declaracao */
 void install(char *sym_name, TipoDados tipo) {
     symrec *s;
     s = getsym(sym_name);
@@ -109,7 +104,6 @@ bool assegura_tipo_numerico(int t) {
     return true;
 }
 
-/* funcao para checar contexto */
 TipoDados context_check(char *sym_name) {
     symrec *sym = getsym(sym_name);
     if (sym == 0) {
