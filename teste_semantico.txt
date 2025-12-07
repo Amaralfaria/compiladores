@@ -1,0 +1,25 @@
+vazio calculos(vazio) {
+    inteiro a;
+    inteiro b;
+    vazio c;
+    inteiro d;
+
+    a = 10;
+    b = 5;
+    
+    c = a + b * 2;  
+    
+    d = (a + b) * 2; 
+    
+    se (c == d) {
+        a = 0;
+    }
+    
+    se (c != d) {
+        a = 1;
+    }
+    
+    se (c <= 20) {
+        b = 0;
+    }
+}
