@@ -7,7 +7,12 @@
 typedef enum {
     T_INTEIRO,
     T_VAZIO,
+    T_ERRO,
 } TipoDados;
+
+typedef int bool;
+#define true 1
+#define false 0
 
 /* Tabela de Símbolos */
 struct symrec {
@@ -33,7 +38,10 @@ symrec *sym_table = (symrec *)0;
 symrec *putsym(char *sym_name, TipoDados tipo);
 symrec *getsym(char *sym_name);
 void install(char *sym_name, TipoDados tipo);
-void context_check(char *sym_name);
+TipoDados context_check(char *sym_name);
+bool assegura_tipo_igual(int t1, int t2);
+bool assegura_tipo_numerico(int t);
+bool assegura_aritmetica(int t1, int t2);
 
 /* funcao para inserir na tabela */
 symrec *putsym(char *sym_name, TipoDados tipo) {
@@ -68,13 +76,47 @@ void install(char *sym_name, TipoDados tipo) {
     }
 }
 
+bool assegura_aritmetica(int t1, int t2){
+    if (!assegura_tipo_igual(t1, t2) || !assegura_tipo_numerico(t1) || !assegura_tipo_numerico(t2)) {
+        return false;
+    }
+    return true;
+}
+
+bool assegura_tipo_igual(int t1, int t2){
+    if (t1 == T_ERRO || t2 == T_ERRO) {
+        return true;
+    }
+
+    if(t1 != t2) {
+        printf("Erro Semântico: Tipos incompatíveis! (Esperava tipos iguais)\n");
+        return false;
+    }
+    return true;
+}
+
+bool assegura_tipo_numerico(int t) {
+    if (t == T_ERRO) {
+        return true;
+    }
+
+    if (t != T_INTEIRO) {
+        printf("Erro Semântico: Operação aritmética requer tipo INTEIRO.\n");
+        return false;
+    }
+    return true;
+}
+
 /* funcao para checar contexto */
-void context_check(char *sym_name) {
-    if (getsym(sym_name) == 0) {
+TipoDados context_check(char *sym_name) {
+    symrec *sym = getsym(sym_name);
+    if (sym == 0) {
         printf("Erro semântico: Identificador '%s' nao declarado.\n", sym_name);
+        return T_ERRO;
     } else {
         /* printf("> Uso: '%s' verificado com sucesso.\n", sym_name); */
     }
+    return sym -> tipo;
 }
 
 %}
@@ -104,6 +146,14 @@ void context_check(char *sym_name) {
 %token DIV
 
 %type <tipo> especificador_de_tipo
+
+%type <tipo> expressao
+%type <tipo> var
+%type <tipo> expressao_simples
+%type <tipo> expressao_aditiva
+%type <tipo> termo
+%type <tipo> fator
+%type <tipo> chamada
 
 %left '='
 %left EQ NE
@@ -175,16 +225,24 @@ comando_de_iteracao: ENQUANTO '(' expressao ')' comando {;}
 comando_de_retorno: RETORNA ';'				{;}
 	| RETORNA expressao ';'				{;}
 ;
-expressao: var '=' expressao				{;}
-		| expressao_simples			{;}
+expressao: var '=' expressao				
+    {
+        assegura_tipo_igual($1, $3);
+        $$ = $1;
+    }
+    | expressao_simples			{$$ = $1;}
 ;
 var: ID 
     { 
-        context_check($1); 
+        $$ = context_check($1); 
     }
 ;
-expressao_simples: expressao_aditiva relop expressao_aditiva			{;}
-		| expressao_aditiva			{;}
+expressao_simples: expressao_aditiva relop expressao_aditiva			
+    {        
+        assegura_aritmetica($1, $3);
+        $$ = T_INTEIRO;       
+    }
+    | expressao_aditiva			{$$ = $1;}
 ;
 relop: LE{;}
 	| GE						{;}
@@ -193,27 +251,35 @@ relop: LE{;}
 	| LT						{;}
 	| GT						{;}
 ;
-expressao_aditiva: expressao_aditiva operacao_add termo {;}
-		| termo					{;}
+expressao_aditiva: expressao_aditiva operacao_add termo 
+    {
+        assegura_aritmetica($1, $3);
+        $$ = T_INTEIRO;       
+    }
+    | termo					{$$ = $1;}
 ;
 
 operacao_add: SOMA					{;}
 	| SUB						{;}
 ;
-termo: termo mulop fator				{;}
-	| fator						{;}
+termo: termo mulop fator				
+    {
+        assegura_aritmetica($1, $3);
+        $$ = T_INTEIRO;
+    }
+	| fator						{$$ = $1;}
 ;
 mulop: MUL						{;}
 	| DIV						{;}
 ;
-fator: NUM                       {;}
-     | var                       {;} 
-     | '(' expressao ')'         {;}
-     | chamada                   {;} 
+fator: NUM                       {$$ = T_INTEIRO;}
+     | var                       {$$ = $1;} 
+     | '(' expressao ')'         {$$ = $2;}
+     | chamada                   {$$ = $1;} 
 ;
 chamada: ID '(' args ')' 
     {
-         context_check($1);
+        $$ = context_check($1);
     }
 ;
 args: lista_args  {;}
