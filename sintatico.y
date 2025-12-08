@@ -5,6 +5,7 @@
 #include <string.h>
 
 extern int num_linhas;
+int endereco_tabela = 0;
 
 typedef enum {
     T_INTEIRO,
@@ -21,6 +22,7 @@ struct registro_de_simbolo {
     char *name;             /* identificador */
     TipoDados tipo;
     struct registro_de_simbolo *proximo;    /* proximo item da lista */
+    int endereco;
 };
 
 typedef struct registro_de_simbolo registro_de_simbolo;
@@ -50,6 +52,7 @@ registro_de_simbolo *adicionar_simbolo(char *nome_do_simbolo, TipoDados tipo) {
     strcpy(ptr->name, nome_do_simbolo);
     ptr->proximo = (struct registro_de_simbolo *)tabela_de_simbolos;
     ptr->tipo = tipo;
+    ptr->endereco = endereco_tabela++;
     tabela_de_simbolos = ptr;
     return ptr;
 }
