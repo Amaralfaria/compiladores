@@ -1,0 +1,16 @@
+inteiro main() {
+    inteiro base;
+    inteiro exp;
+    inteiro prod;
+
+    base = 2;
+    exp = 3;
+    prod = 1;
+
+    enquanto (exp > 0) {
+        prod = prod * base;
+        exp = exp - 1;
+    }
+
+    retorna prod;
+}
