@@ -187,6 +187,7 @@ declaracao_de_funcao: especificador_de_tipo ID '(' params ')' comando_composto {
 ;
 params: lista_params {;}
       | VAZIO        {;}
+      | /* vazio */  {;}
 ;
 lista_params: lista_params ',' param {;}
             | param                  {;}
